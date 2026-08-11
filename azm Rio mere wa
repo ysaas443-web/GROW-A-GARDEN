@@ -1,0 +1,239 @@
+-- Rio & Raman & Rayo Hub - Ultimate Edition (Fixed GUI Visible)
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CoreGui = game:GetService("CoreGui")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ژێبرنا GUIیا کەڤن ئەگەر هەبێت
+pcall(function()
+    if CoreGui:FindFirstChild("RioRamanRayoHub") then
+        CoreGui.RioRamanRayoHub:Destroy()
+    end
+    if PlayerGui:FindFirstChild("RioRamanRayoHub") then
+        PlayerGui.RioRamanRayoHub:Destroy()
+    end
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "RioRamanRayoHub"
+ScreenGui.ResetOnSpawn = false
+
+-- هەولدان بۆ ددانە سەر CoreGui، ئەگەر نەدابوو ل سەر PlayerGui ددانە
+local success = pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not success then
+    ScreenGui.Parent = PlayerGui
+end
+
+-- دوگمەیا ڤەشارتن و نیشاندانێ (ل گوشەیا چەپ ب سەرکەفتی دیار دبیت)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Name = "ToggleBtn"
+ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
+ToggleBtn.Position = UDim2.new(0, 30, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize = 22
+ToggleBtn.Font = Enum.Font.SourceSansBold
+ToggleBtn.Text = "🌱"
+ToggleBtn.Parent = ScreenGui
+
+local tCorner = Instance.new("UICorner")
+tCorner.CornerRadius = UDim.new(0, 10)
+tCorner.Parent = ToggleBtn
+
+-- پەنجەرەیا سەرەکی
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 300, 0, 380)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -190)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = true -- دیارکرنا سەرەکی
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 50)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 18
+Title.Font = Enum.Font.SourceSansBold
+Title.Text = "Rio & Raman & Rayo"
+Title.Parent = MainFrame
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -20, 1, -65)
+ScrollingFrame.Position = UDim2.new(0, 10, 0, 55)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 10)
+UIListLayout.Parent = ScrollingFrame
+
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 15)
+end)
+
+-- ١. سکەنەرێ فێقییان
+local scannerRunning = false
+local connection = nil
+
+local function addStatsGui(obj)
+    if not scannerRunning then return end
+    if not (obj:IsA("Model") or obj:IsA("Part")) then return end
+    
+    local weightObj = obj:FindFirstChild("Weight") or obj:FindFirstChild("KG") or obj:FindFirstChild("Size")
+    local priceObj = obj:FindFirstChild("Price") or obj:FindFirstChild("Value") or obj:FindFirstChild("SellValue")
+    
+    local rawWeight = nil
+    if weightObj and weightObj:IsA("ValueBase") then
+        rawWeight = tonumber(weightObj.Value)
+    elseif weightObj and weightObj:IsA("BasePart") then
+        rawWeight = tonumber(weightObj.Size.X)
+    elseif obj:GetAttribute("Weight") or obj:GetAttribute("KG") then
+        rawWeight = tonumber(obj:GetAttribute("Weight") or obj:GetAttribute("KG"))
+    end
+    
+    local rawPrice = nil
+    if priceObj and priceObj:IsA("ValueBase") then
+        rawPrice = tonumber(priceObj.Value)
+    elseif priceObj and type(priceObj.Value) == "number" then
+        rawPrice = tonumber(priceObj.Value)
+    else
+        local attrPrice = obj:GetAttribute("Price") or obj:GetAttribute("SellValue") or obj:GetAttribute("Value")
+        if attrPrice then
+            rawPrice = tonumber(attrPrice)
+        end
+    end
+    
+    if rawWeight or rawPrice then
+        if not obj:FindFirstChild("FruitStatsGui") then
+            local wVal = "N/N"
+            if rawWeight then
+                wVal = string.format("%.1f", rawWeight) .. " kg"
+            end
+            
+            local pVal = "N/N"
+            if rawPrice then
+                pVal = tostring(math.floor(rawPrice + 0.5)) .. " Sheckles"
+            end
+            
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "FruitStatsGui"
+            billboard.Size = UDim2.new(0, 130, 0, 55)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.AlwaysOnTop = true
+            
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+            textLabel.TextStrokeTransparency = 0
+            textLabel.TextSize = 13
+            textLabel.Font = Enum.Font.SourceSansBold
+            textLabel.Text = obj.Name .. "\n⚖️ " .. wVal .. "\n💰 " .. pVal
+            
+            textLabel.Parent = billboard
+            billboard.Parent = obj
+        end
+    end
+end
+
+local scanBtn = Instance.new("TextButton")
+scanBtn.Size = UDim2.new(1, 0, 0, 40)
+scanBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+scanBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+scanBtn.TextSize = 14
+scanBtn.Font = Enum.Font.SourceSansSemibold
+scanBtn.Text = "📊 Scan Fruit Stats: OFF"
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = scanBtn
+scanBtn.Parent = ScrollingFrame
+
+scanBtn.MouseButton1Click:Connect(function()
+    scannerRunning = not scannerRunning
+    if scannerRunning then
+        scanBtn.Text = "📊 Scan Fruit Stats: ON"
+        scanBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+        
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            addStatsGui(obj)
+        end
+        
+        if not connection then
+            connection = workspace.DescendantAdded:Connect(function(obj)
+                if scannerRunning then
+                    task.wait(0.4)
+                    addStatsGui(obj)
+                end
+            end)
+        end
+    else
+        scanBtn.Text = "📊 Scan Fruit Stats: OFF"
+        scanBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            local oldGui = obj:FindFirstChild("FruitStatsGui")
+            if oldGui then
+                oldGui:Destroy()
+            end
+        end
+    end
+end)
+
+-- فەنکشن بۆ دروستکرنا دوگمەیێن کڕینێ ب بادینی
+local function createBuyButton(text, eventName)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.SourceSansSemibold
+    btn.Text = text .. ": OFF"
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+    btn.Parent = ScrollingFrame
+    
+    local running = false
+    btn.MouseButton1Click:Connect(function()
+        running = not running
+        btn.Text = text .. ": " .. (running and "ON" or "OFF")
+        btn.BackgroundColor3 = running and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    pcall(function()
+                        ReplicatedStorage.GameEvents.BuyGearStock:FireServer(eventName)
+                    end)
+                    task.wait(1)
+                end
+            end)
+        end
+    end)
+end
+
+-- زیادکرنا دوگمەیێن کڕینێ ب ناڤێن تە خواستین
+createBuyButton("کرینا تیکێتێن تڕەیدێ 🎟️", "Trading Ticket")
+createBuyButton("کرینا تروێل 🛠️", "Trowel")
+createBuyButton("کرینا هارڤێست 🌾", "Harvest Tool")
+createBuyButton("کرینا دلکێ سور ❤️", "Favorite Tool")
+
