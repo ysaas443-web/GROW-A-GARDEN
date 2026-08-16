@@ -1,9 +1,10 @@
--- Rio & Raman & Rayo Hub - Ultimate Edition (Fixed GUI Visible)
+-- Rio & Raman & Rayo Hub - Final Fixed Toggle & Collect Edition
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local CollectEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Crops"):WaitForChild("Collect")
 
 -- ژێبرنا GUIیا کەڤن ئەگەر هەبێت
 pcall(function()
@@ -19,7 +20,6 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RioRamanRayoHub"
 ScreenGui.ResetOnSpawn = false
 
--- هەولدان بۆ ددانە سەر CoreGui، ئەگەر نەدابوو ل سەر PlayerGui ددانە
 local success = pcall(function()
     ScreenGui.Parent = CoreGui
 end)
@@ -27,7 +27,7 @@ if not success then
     ScreenGui.Parent = PlayerGui
 end
 
--- دوگمەیا ڤەشارتن و نیشاندانێ (ل گوشەیا چەپ ب سەرکەفتی دیار دبیت)
+-- دوگمەیا ڤەشارتن و نیشاندانێ (🌱)
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Name = "ToggleBtn"
 ToggleBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -46,13 +46,13 @@ tCorner.Parent = ToggleBtn
 -- پەنجەرەیا سەرەکی
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 300, 0, 380)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -190)
+MainFrame.Size = UDim2.new(0, 320, 0, 400)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -200)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Visible = true -- دیارکرنا سەرەکی
+MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner")
@@ -64,31 +64,113 @@ ToggleBtn.MouseButton1Click:Connect(function()
 end)
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 50)
+Title.Size = UDim2.new(1, 0, 0, 40)
 Title.BackgroundTransparency = 1
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 18
+Title.TextSize = 16
 Title.Font = Enum.Font.SourceSansBold
-Title.Text = "Rio & Raman & Rayo"
+Title.Text = "Rio & Raman & Rayo Hub"
 Title.Parent = MainFrame
 
-local ScrollingFrame = Instance.new("ScrollingFrame")
-ScrollingFrame.Size = UDim2.new(1, -20, 1, -65)
-ScrollingFrame.Position = UDim2.new(0, 10, 0, 55)
-ScrollingFrame.BackgroundTransparency = 1
-ScrollingFrame.ScrollBarThickness = 6
-ScrollingFrame.Parent = MainFrame
+-- بەشێ تابان (Tabs: Gear & Fruit)
+local SwitchContainer = Instance.new("Frame")
+SwitchContainer.Size = UDim2.new(1, -20, 0, 35)
+SwitchContainer.Position = UDim2.new(0, 10, 0, 42)
+SwitchContainer.BackgroundTransparency = 1
+SwitchContainer.Parent = MainFrame
 
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 10)
-UIListLayout.Parent = ScrollingFrame
+local function createSwitchBtn(text, posX)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.48, 0, 1, 0)
+    btn.Position = UDim2.new(posX, 0, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Text = text
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.Parent = SwitchContainer
+    return btn
+end
 
-UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 15)
+local GearTab = createSwitchBtn("⚙️ Gear", 0)
+local FruitTab = createSwitchBtn("🍎 Fruit", 0.52)
+
+-- فریمێ Gear
+local GearFrame = Instance.new("ScrollingFrame")
+GearFrame.Size = UDim2.new(1, -20, 1, -90)
+GearFrame.Position = UDim2.new(0, 10, 0, 85)
+GearFrame.BackgroundTransparency = 1
+GearFrame.ScrollBarThickness = 4
+GearFrame.Parent = MainFrame
+local gearLayout = Instance.new("UIListLayout")
+gearLayout.Padding = UDim.new(0, 8)
+gearLayout.Parent = GearFrame
+
+-- فریمێ Fruit
+local FruitFrame = Instance.new("ScrollingFrame")
+FruitFrame.Size = GearFrame.Size
+FruitFrame.Position = GearFrame.Position
+FruitFrame.BackgroundTransparency = 1
+FruitFrame.ScrollBarThickness = 4
+FruitFrame.Visible = false
+FruitFrame.Parent = MainFrame
+local fruitLayout = Instance.new("UIListLayout")
+fruitLayout.Padding = UDim.new(0, 8)
+fruitLayout.Parent = FruitFrame
+
+GearTab.MouseButton1Click:Connect(function()
+    GearFrame.Visible = true
+    FruitFrame.Visible = false
+    GearTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    FruitTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 end)
 
--- ١. سکەنەرێ فێقییان
+FruitTab.MouseButton1Click:Connect(function()
+    GearFrame.Visible = false
+    FruitFrame.Visible = true
+    FruitTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    GearTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+end)
+GearTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+
+-- زیادکرنا دوگمەیێن Gear
+local function addGearBtn(text, eventName)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.SourceSansSemibold
+    btn.Text = text .. ": OFF"
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.Parent = GearFrame
+    
+    local running = false
+    btn.MouseButton1Click:Connect(function()
+        running = not running
+        btn.Text = text .. ": " .. (running and "ON" or "OFF")
+        btn.BackgroundColor3 = running and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    pcall(function()
+                        ReplicatedStorage.GameEvents.BuyGearStock:FireServer(eventName)
+                    end)
+                    task.wait(1)
+                end
+            end)
+        end
+    end)
+end
+
+addGearBtn("کرینا تروێل 🛠️", "Trowel")
+addGearBtn("کرینا تیکێتێن تڕەیدێ 🎟️", "Trading Ticket")
+addGearBtn("کرینا هارڤێست 🌾", "Harvest Tool")
+addGearBtn("کرینا دلکێ سور ❤️", "Favorite Tool")
+
+-- ١. سکەنەرێ فێقییان (BillboardGui)
 local scannerRunning = false
 local connection = nil
 
@@ -103,6 +185,176 @@ local function addStatsGui(obj)
     if weightObj and weightObj:IsA("ValueBase") then
         rawWeight = tonumber(weightObj.Value)
     elseif weightObj and weightObj:IsA("BasePart") then
+        rawWeight = tonumber(weightObj.Size.X)
+    elseif obj:GetAttribute("Weight") or obj:GetAttribute("KG") then
+        rawWeight = tonumber(obj:GetAttribute("Weight") or obj:GetAttribute("KG"))
+    end
+    
+    local rawPrice = nil
+    if priceObj and priceObj:IsA("ValueBase") then
+        rawPrice = tonumber(priceObj.Value)
+    elseif priceObj and type(priceObj.Value) == "number" then
+        rawPrice = tonumber(priceObj.Value)
+    else
+        local attrPrice = obj:GetAttribute("Price") or obj:GetAttribute("SellValue") or obj:GetAttribute("Value")
+        if attrPrice then
+            rawPrice = tonumber(attrPrice)
+        end
+    end
+    
+    if rawWeight or rawPrice then
+        if not obj:FindFirstChild("FruitStatsGui") then
+            local wVal = rawWeight and (string.format("%.1f", rawWeight) .. " kg") or "N/N"
+            local pVal = rawPrice and (tostring(math.floor(rawPrice + 0.5)) .. " Sheckles") or "N/N"
+            
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "FruitStatsGui"
+            billboard.Size = UDim2.new(0, 130, 0, 55)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.AlwaysOnTop = true
+            
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+            textLabel.TextStrokeTransparency = 0
+            textLabel.TextSize = 13
+            textLabel.Font = Enum.Font.SourceSansBold
+            textLabel.Text = obj.Name .. "\n⚖️ " .. wVal .. "\n💰 " .. pVal
+            
+            textLabel.Parent = billboard
+            billboard.Parent = obj
+        end
+    end
+end
+
+local scanBtn = Instance.new("TextButton")
+scanBtn.Size = UDim2.new(1, 0, 0, 38)
+scanBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+scanBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+scanBtn.TextSize = 14
+scanBtn.Font = Enum.Font.SourceSansSemibold
+scanBtn.Text = "📊 Scan Fruit Stats: OFF"
+Instance.new("UICorner", scanBtn).CornerRadius = UDim.new(0, 8)
+scanBtn.Parent = FruitFrame
+
+scanBtn.MouseButton1Click:Connect(function()
+    scannerRunning = not scannerRunning
+    if scannerRunning then
+        scanBtn.Text = "📊 Scan Fruit Stats: ON"
+        scanBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+        
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            addStatsGui(obj)
+        end
+        
+        if not connection then
+            connection = workspace.DescendantAdded:Connect(function(obj)
+                if scannerRunning then
+                    task.wait(0.4)
+                    addStatsGui(obj)
+                end
+            end)
+        end
+    else
+        scanBtn.Text = "📊 Scan Fruit Stats: OFF"
+        scanBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            local oldGui = obj:FindFirstChild("FruitStatsGui")
+            if oldGui then oldGui:Destroy() end
+        end
+    end
+end)
+
+-- نیشاندانا گشتییا کێشی (KG Display)
+local KgDisplay = Instance.new("TextLabel")
+KgDisplay.Size = UDim2.new(1, 0, 0, 38)
+KgDisplay.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KgDisplay.TextColor3 = Color3.fromRGB(255, 255, 0)
+KgDisplay.TextSize = 14
+KgDisplay.Font = Enum.Font.SourceSansBold
+KgDisplay.Text = "⚖️ Total KG: 0.0 kg"
+Instance.new("UICorner", KgDisplay).CornerRadius = UDim.new(0, 8)
+KgDisplay.Parent = FruitFrame
+
+-- بۆکسێ نڤێسینێ بۆ Max KG
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(1, 0, 0, 38)
+InputBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+InputBox.PlaceholderText = "Enter Max KG (e.g. 70)"
+InputBox.Text = "70"
+InputBox.Font = Enum.Font.SourceSansBold
+InputBox.TextSize = 14
+Instance.new("UICorner", InputBox).CornerRadius = UDim.new(0, 8)
+InputBox.Parent = FruitFrame
+
+-- دوگمەیا ئۆتۆ کۆمکرنێ (Auto Collect)
+local AutoCollectBtn = Instance.new("TextButton")
+AutoCollectBtn.Size = UDim2.new(1, 0, 0, 38)
+AutoCollectBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+AutoCollectBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoCollectBtn.TextSize = 14
+AutoCollectBtn.Font = Enum.Font.SourceSansBold
+AutoCollectBtn.Text = "🧺 Auto Collect: OFF"
+Instance.new("UICorner", AutoCollectBtn).CornerRadius = UDim.new(0, 8)
+AutoCollectBtn.Parent = FruitFrame
+
+local AutoCollectActive = false
+
+AutoCollectBtn.MouseButton1Click:Connect(function()
+    AutoCollectActive = not AutoCollectActive
+    AutoCollectBtn.Text = AutoCollectActive and "🧺 Auto Collect: ON" or "🧺 Auto Collect: OFF"
+    AutoCollectBtn.BackgroundColor3 = AutoCollectActive and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
+end)
+
+-- لۆپا کۆمکرنا فێقیان (بەتەواوی گرێدایی AutoCollectActive بۆ کو دەمێ OFF بوو بوەستێت)
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        pcall(function()
+            local totalKg = 0
+            local maxKg = tonumber(InputBox.Text) or 70
+            local itemsToCollect = {}
+            
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if (obj:IsA("Model") or obj:IsA("Part")) then
+                    local nameLower = obj.Name:lower()
+                    local isProtected = string.find(nameLower, "seed") or string.find(nameLower, "tree") or string.find(nameLower, "dar")
+                    
+                    local w = obj:FindFirstChild("Weight") or obj:FindFirstChild("KG") or obj:FindFirstChild("Size")
+                    local weightVal = 0
+                    if w and w:IsA("ValueBase") then 
+                        weightVal = tonumber(w.Value or 0) 
+                    elseif w and w:IsA("BasePart") then
+                        weightVal = tonumber(w.Size.X)
+                    elseif obj:GetAttribute("Weight") or obj:GetAttribute("KG") then
+                        weightVal = tonumber(obj:GetAttribute("Weight") or obj:GetAttribute("KG"))
+                    end
+                    
+                    if not isProtected and weightVal > 0 then 
+                        totalKg = totalKg + weightVal 
+                    end
+                    
+                    -- کۆمکرن تنێ ئەگەر Auto Collect لەسەر ON بێت و کێش ژ Max KG کێمتر بێت
+                    if AutoCollectActive and not isProtected then
+                        if weightVal > 0 and weightVal < (maxKg - 0.05) then
+                            table.insert(itemsToCollect, obj)
+                        end
+                    end
+                end
+            end
+            
+            KgDisplay.Text = "⚖️ Total KG: " .. string.format("%.1f", totalKg) .. " kg"
+            
+            -- ئەگەر OFF بوو، چ جار فێقیان نەنێرە بۆ سێرڤەری تەنانەت ئەگەر تێدابن
+            if AutoCollectActive and #itemsToCollect > 0 then
+                CollectEvent:FireServer(itemsToCollect)
+            end
+        end)
+    end
+end)
         rawWeight = tonumber(weightObj.Size.X)
     elseif obj:GetAttribute("Weight") or obj:GetAttribute("KG") then
         rawWeight = tonumber(obj:GetAttribute("Weight") or obj:GetAttribute("KG"))
