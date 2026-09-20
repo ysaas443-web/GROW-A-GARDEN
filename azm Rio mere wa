@@ -1,31 +1,29 @@
--- Rio & Raman & Rayo Hub - Final Fixed Toggle & Collect Edition
+-- Rio & Raman & Rayo Hub - Final Seed & Gear Fixed Edition
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CoreGui = game:GetService("CoreGui")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local CollectEvent = ReplicatedStorage:WaitForChild("GameEvents"):WaitForChild("Crops"):WaitForChild("Collect")
+
+-- دڵنیابوون ژ هەبوونا ڕێمۆتان ب پشکنین (Safe Remote Getters)
+local GameEvents = ReplicatedStorage:WaitForChild("GameEvents", 5)
+local BuyGearEvent = GameEvents and GameEvents:FindFirstChild("BuyGearStock")
+local BuySeedEvent = GameEvents and GameEvents:FindFirstChild("BuySeedStock")
+local CollectEvent = GameEvents and GameEvents:FindFirstChild("Crops") and GameEvents.Crops:FindFirstChild("Collect")
+local FavRemote = GameEvents and GameEvents:FindFirstChild("FavoriteToolRemote")
 
 -- ژێبرنا GUIیا کەڤن ئەگەر هەبێت
 pcall(function()
-    if CoreGui:FindFirstChild("RioRamanRayoHub") then
-        CoreGui.RioRamanRayoHub:Destroy()
-    end
-    if PlayerGui:FindFirstChild("RioRamanRayoHub") then
-        PlayerGui.RioRamanRayoHub:Destroy()
-    end
+    if CoreGui:FindFirstChild("RioRamanRayoHub") then CoreGui.RioRamanRayoHub:Destroy() end
+    if PlayerGui:FindFirstChild("RioRamanRayoHub") then PlayerGui.RioRamanRayoHub:Destroy() end
 end)
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "RioRamanRayoHub"
 ScreenGui.ResetOnSpawn = false
 
-local success = pcall(function()
-    ScreenGui.Parent = CoreGui
-end)
-if not success then
-    ScreenGui.Parent = PlayerGui
-end
+local success = pcall(function() ScreenGui.Parent = CoreGui end)
+if not success then ScreenGui.Parent = PlayerGui end
 
 -- دوگمەیا ڤەشارتن و نیشاندانێ (🌱)
 local ToggleBtn = Instance.new("TextButton")
@@ -38,26 +36,20 @@ ToggleBtn.TextSize = 22
 ToggleBtn.Font = Enum.Font.SourceSansBold
 ToggleBtn.Text = "🌱"
 ToggleBtn.Parent = ScreenGui
-
-local tCorner = Instance.new("UICorner")
-tCorner.CornerRadius = UDim.new(0, 10)
-tCorner.Parent = ToggleBtn
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0, 10)
 
 -- پەنجەرەیا سەرەکی
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 320, 0, 400)
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 320, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -210)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 12)
-UICorner.Parent = MainFrame
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
 
 ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
@@ -72,20 +64,20 @@ Title.Font = Enum.Font.SourceSansBold
 Title.Text = "Rio & Raman & Rayo Hub"
 Title.Parent = MainFrame
 
--- بەشێ تابان (Tabs: Gear & Fruit)
+-- بەشێ تابان (Tabs)
 local SwitchContainer = Instance.new("Frame")
 SwitchContainer.Size = UDim2.new(1, -20, 0, 35)
 SwitchContainer.Position = UDim2.new(0, 10, 0, 42)
 SwitchContainer.BackgroundTransparency = 1
 SwitchContainer.Parent = MainFrame
 
-local function createSwitchBtn(text, posX)
+local function createSwitchBtn(text, posX, sizeX)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.48, 0, 1, 0)
+    btn.Size = UDim2.new(sizeX, 0, 1, 0)
     btn.Position = UDim2.new(posX, 0, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 14
+    btn.TextSize = 12
     btn.Font = Enum.Font.SourceSansBold
     btn.Text = text
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
@@ -93,54 +85,71 @@ local function createSwitchBtn(text, posX)
     return btn
 end
 
-local GearTab = createSwitchBtn("⚙️ Gear", 0)
-local FruitTab = createSwitchBtn("🍎 Fruit", 0.52)
+local GearTab = createSwitchBtn("⚙️ Gear", 0, 0.23)
+local SeedTab = createSwitchBtn("🌱 Seeds", 0.25, 0.23)
+local FruitTab = createSwitchBtn("🍎 Fruit", 0.50, 0.23)
+local FavTab = createSwitchBtn("⭐ Fav", 0.75, 0.23)
 
--- فریمێ Gear
-local GearFrame = Instance.new("ScrollingFrame")
-GearFrame.Size = UDim2.new(1, -20, 1, -90)
-GearFrame.Position = UDim2.new(0, 10, 0, 85)
-GearFrame.BackgroundTransparency = 1
-GearFrame.ScrollBarThickness = 4
-GearFrame.Parent = MainFrame
-local gearLayout = Instance.new("UIListLayout")
-gearLayout.Padding = UDim.new(0, 8)
-gearLayout.Parent = GearFrame
+-- فریمێن تابا
+local function createScrollFrame()
+    local f = Instance.new("ScrollingFrame")
+    f.Size = UDim2.new(1, -20, 1, -90)
+    f.Position = UDim2.new(0, 10, 0, 85)
+    f.BackgroundTransparency = 1
+    f.ScrollBarThickness = 4
+    f.Parent = MainFrame
+    local l = Instance.new("UIListLayout")
+    l.Padding = UDim.new(0, 8)
+    l.Parent = f
+    return f
+end
 
--- فریمێ Fruit
-local FruitFrame = Instance.new("ScrollingFrame")
-FruitFrame.Size = GearFrame.Size
-FruitFrame.Position = GearFrame.Position
-FruitFrame.BackgroundTransparency = 1
-FruitFrame.ScrollBarThickness = 4
-FruitFrame.Visible = false
-FruitFrame.Parent = MainFrame
-local fruitLayout = Instance.new("UIListLayout")
-fruitLayout.Padding = UDim.new(0, 8)
-fruitLayout.Parent = FruitFrame
+local GearFrame = createScrollFrame()
+local SeedFrame = createScrollFrame(); SeedFrame.Visible = false
+local FruitFrame = createScrollFrame(); FruitFrame.Visible = false
+local FavFrame = createScrollFrame(); FavFrame.Visible = false
 
 GearTab.MouseButton1Click:Connect(function()
-    GearFrame.Visible = true
-    FruitFrame.Visible = false
+    GearFrame.Visible = true; SeedFrame.Visible = false; FruitFrame.Visible = false; FavFrame.Visible = false
     GearTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    SeedTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
     FruitTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    FavTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+end)
+
+SeedTab.MouseButton1Click:Connect(function()
+    GearFrame.Visible = false; SeedFrame.Visible = true; FruitFrame.Visible = false; FavFrame.Visible = false
+    SeedTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    GearTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    FruitTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    FavTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 end)
 
 FruitTab.MouseButton1Click:Connect(function()
-    GearFrame.Visible = false
-    FruitFrame.Visible = true
+    GearFrame.Visible = false; SeedFrame.Visible = false; FruitFrame.Visible = true; FavFrame.Visible = false
     FruitTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     GearTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SeedTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    FavTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 end)
+
+FavTab.MouseButton1Click:Connect(function()
+    GearFrame.Visible = false; SeedFrame.Visible = false; FruitFrame.Visible = false; FavFrame.Visible = true
+    FavTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    GearTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    SeedTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    FruitTab.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+end)
+
 GearTab.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 
--- زیادکرنا دوگمەیێن Gear
+-- فەنکشنا کڕینا Gear
 local function addGearBtn(text, eventName)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 38)
     btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 14
+    btn.TextSize = 13
     btn.Font = Enum.Font.SourceSansSemibold
     btn.Text = text .. ": OFF"
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
@@ -156,7 +165,9 @@ local function addGearBtn(text, eventName)
             task.spawn(function()
                 while running do
                     pcall(function()
-                        ReplicatedStorage.GameEvents.BuyGearStock:FireServer(eventName)
+                        if BuyGearEvent then
+                            BuyGearEvent:FireServer(eventName)
+                        end
                     end)
                     task.wait(1)
                 end
@@ -165,12 +176,63 @@ local function addGearBtn(text, eventName)
     end)
 end
 
+-- زیادکرنا هەمی Gearـان
 addGearBtn("کرینا تروێل 🛠️", "Trowel")
 addGearBtn("کرینا تیکێتێن تڕەیدێ 🎟️", "Trading Ticket")
 addGearBtn("کرینا هارڤێست 🌾", "Harvest Tool")
 addGearBtn("کرینا دلکێ سور ❤️", "Favorite Tool")
+addGearBtn("شاردێ پەتی 🐾", "Cleaning Pet Shard")
+addGearBtn("لۆلۆپۆپا لڤێل ئەپ 🍭", "Levelup Lollipop")
+addGearBtn("سپرایێ پاوژۆنی 🧼", "Cleaning Spray")
+addGearBtn("مەگنیفایینگ گلاس 🔍", "Magnifying Glass")
+addGearBtn("پێت لید 🐕", "Pet Lead")
+addGearBtn("رێکول رێنچ 🔧", "Recall Wrench")
+addGearBtn("گڕاند مەستەر 🌟", "Grand Master")
+addGearBtn("بەیزیک سپرینکلەر 💧", "Basic Sprinkler")
+addGearBtn("گۆدلی سپرینکلەر ⚡", "Godly Sprinkler")
+addGearBtn("ئادڤانس سپرینکلەر 🌀", "Advance Sprinkler")
+addGearBtn("واتەریدنگ کەن 🚿", "Watering Can")
 
--- ١. سکەنەرێ فێقییان (BillboardGui)
+-- فەنکشنا کڕینا گەنمان (Seeds) ب شێوازێ دروست ("Shop", seedName)
+local function addSeedBtn(text, seedName)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 38)
+    btn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 13
+    btn.Font = Enum.Font.SourceSansSemibold
+    btn.Text = text .. ": OFF"
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
+    btn.Parent = SeedFrame
+    
+    local running = false
+    btn.MouseButton1Click:Connect(function()
+        running = not running
+        btn.Text = text .. ": " .. (running and "ON" or "OFF")
+        btn.BackgroundColor3 = running and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    pcall(function()
+                        if BuySeedEvent then
+                            BuySeedEvent:FireServer("Shop", seedName)
+                        end
+                    end)
+                    task.wait(1)
+                end
+            end)
+        end
+    end)
+end
+
+-- زیادکرنا گەنمێن داخوازی
+addSeedBtn("کرینا کەڕۆت 🥕", "Carrot")
+addSeedBtn("کرینا سترۆبێری 🍓", "Strawberry")
+addSeedBtn("کرینا بلوبێری 🫐", "Blueberry")
+addSeedBtn("کرینا تۆماتۆ 🍅", "Tomato")
+
+-- ١. سکەنەرێ فێقییان
 local scannerRunning = false
 local connection = nil
 
@@ -197,9 +259,7 @@ local function addStatsGui(obj)
         rawPrice = tonumber(priceObj.Value)
     else
         local attrPrice = obj:GetAttribute("Price") or obj:GetAttribute("SellValue") or obj:GetAttribute("Value")
-        if attrPrice then
-            rawPrice = tonumber(attrPrice)
-        end
+        if attrPrice then rawPrice = tonumber(attrPrice) end
     end
     
     if rawWeight or rawPrice then
@@ -221,7 +281,6 @@ local function addStatsGui(obj)
             textLabel.TextSize = 13
             textLabel.Font = Enum.Font.SourceSansBold
             textLabel.Text = obj.Name .. "\n⚖️ " .. wVal .. "\n💰 " .. pVal
-            
             textLabel.Parent = billboard
             billboard.Parent = obj
         end
@@ -243,11 +302,7 @@ scanBtn.MouseButton1Click:Connect(function()
     if scannerRunning then
         scanBtn.Text = "📊 Scan Fruit Stats: ON"
         scanBtn.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
-        
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            addStatsGui(obj)
-        end
-        
+        for _, obj in ipairs(workspace:GetDescendants()) do addStatsGui(obj) end
         if not connection then
             connection = workspace.DescendantAdded:Connect(function(obj)
                 if scannerRunning then
@@ -259,7 +314,6 @@ scanBtn.MouseButton1Click:Connect(function()
     else
         scanBtn.Text = "📊 Scan Fruit Stats: OFF"
         scanBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-        
         for _, obj in ipairs(workspace:GetDescendants()) do
             local oldGui = obj:FindFirstChild("FruitStatsGui")
             if oldGui then oldGui:Destroy() end
@@ -267,7 +321,7 @@ scanBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- نیشاندانا گشتییا کێشی (KG Display)
+-- نیشاندانا گشتییا کێشی
 local KgDisplay = Instance.new("TextLabel")
 KgDisplay.Size = UDim2.new(1, 0, 0, 38)
 KgDisplay.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
@@ -302,14 +356,13 @@ Instance.new("UICorner", AutoCollectBtn).CornerRadius = UDim.new(0, 8)
 AutoCollectBtn.Parent = FruitFrame
 
 local AutoCollectActive = false
-
 AutoCollectBtn.MouseButton1Click:Connect(function()
     AutoCollectActive = not AutoCollectActive
     AutoCollectBtn.Text = AutoCollectActive and "🧺 Auto Collect: ON" or "🧺 Auto Collect: OFF"
     AutoCollectBtn.BackgroundColor3 = AutoCollectActive and Color3.fromRGB(50, 180, 50) or Color3.fromRGB(180, 50, 50)
 end)
 
--- لۆپا کۆمکرنا فێقیان (بەتەواوی گرێدایی AutoCollectActive بۆ کو دەمێ OFF بوو بوەستێت)
+-- لۆپا کۆمکرنا فێقیان
 task.spawn(function()
     while true do
         task.wait(0.5)
@@ -337,7 +390,6 @@ task.spawn(function()
                         totalKg = totalKg + weightVal 
                     end
                     
-                    -- کۆمکرن تنێ ئەگەر Auto Collect لەسەر ON بێت و کێش ژ Max KG کێمتر بێت
                     if AutoCollectActive and not isProtected then
                         if weightVal > 0 and weightVal < (maxKg - 0.05) then
                             table.insert(itemsToCollect, obj)
@@ -348,10 +400,60 @@ task.spawn(function()
             
             KgDisplay.Text = "⚖️ Total KG: " .. string.format("%.1f", totalKg) .. " kg"
             
-            -- ئەگەر OFF بوو، چ جار فێقیان نەنێرە بۆ سێرڤەری تەنانەت ئەگەر تێدابن
-            if AutoCollectActive and #itemsToCollect > 0 then
+            if AutoCollectActive and #itemsToCollect > 0 and CollectEvent then
                 CollectEvent:FireServer(itemsToCollect)
             end
         end)
     end
 end)
+
+-- دوگمەیێن Favorite
+local FavBtnUI = Instance.new("TextButton")
+FavBtnUI.Size = UDim2.new(1, 0, 0, 45)
+FavBtnUI.BackgroundColor3 = Color3.fromRGB(46, 204, 113)
+FavBtnUI.TextColor3 = Color3.fromRGB(255, 255, 255)
+FavBtnUI.TextSize = 16
+FavBtnUI.Font = Enum.Font.SourceSansBold
+FavBtnUI.Text = "⭐ Favorite All Fruits"
+Instance.new("UICorner", FavBtnUI).CornerRadius = UDim.new(0, 8)
+FavBtnUI.Parent = FavFrame
+
+local UnfavBtnUI = Instance.new("TextButton")
+UnfavBtnUI.Size = UDim2.new(1, 0, 0, 45)
+UnfavBtnUI.BackgroundColor3 = Color3.fromRGB(231, 76, 60)
+UnfavBtnUI.TextColor3 = Color3.fromRGB(255, 255, 255)
+UnfavBtnUI.TextSize = 16
+UnfavBtnUI.Font = Enum.Font.SourceSansBold
+UnfavBtnUI.Text = "❌ Unfavorite All Fruits"
+Instance.new("UICorner", UnfavBtnUI).CornerRadius = UDim.new(0, 8)
+UnfavBtnUI.Parent = FavFrame
+
+local function processFruits(status)
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local tool = character:FindFirstChildOfClass("Tool") or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
+    
+    if not tool then
+        warn("تکایە Favorite Toolەکە لە دەستت بگرە (Equip بکە)!")
+        return
+    end
+
+    local plantsFolder = workspace:FindFirstChild("Farm") 
+        and workspace.Farm:FindFirstChild("Farm") 
+        and workspace.Farm.Farm:FindFirstChild("Important") 
+        and workspace.Farm.Farm.Important:FindFirstChild("Plants_Physical")
+
+    if plantsFolder and FavRemote then
+        for _, plant in pairs(plantsFolder:GetChildren()) do
+            local fruitsFolder = plant:FindFirstChild("Fruits")
+            if fruitsFolder then
+                for _, fruit in pairs(fruitsFolder:GetChildren()) do
+                    FavRemote:InvokeServer(tool, fruit, status)
+                    task.wait(0.03)
+                end
+            end
+        end
+    end
+end
+
+FavBtnUI.MouseButton1Click:Connect(function() processFruits(true) end)
+UnfavBtnUI.MouseButton1Click:Connect(function() processFruits(false) end)
